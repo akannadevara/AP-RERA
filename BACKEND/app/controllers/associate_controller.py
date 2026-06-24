@@ -2,6 +2,7 @@ import logging
 import os
 import json
 from flask import Blueprint, request, jsonify
+# Storing values as plain text for associate details (no encryption/decryption)
 from app.models.project_agent import AgentModel
 from app.models.architect import Architect
 from app.models.engineer import Engineer
@@ -10,6 +11,9 @@ from app.models.accountant import Accountant
 from app.models.project_engineer import ProjectEngineer
 from app.models.database import db
 from app.models.application_associate import ApplicationAssociate
+from app.utils.encryption import encrypt_value
+from app.utils.encryption import decrypt_value
+
 
 
 # ---------------------------------------------------
@@ -41,7 +45,7 @@ def map_project_agents(agents):
         "name": a.agent_name,
         "registrationNo": a.rera_registration_no,
         "address": a.agent_address,
-        "mobile": a.mobile_number
+        "mobile": a.to_dict().get("mobile_number")
     } for a in agents]
 
 
@@ -49,11 +53,11 @@ def map_architects(architects):
     return [{
         "id": a.id,
         "name": a.architect_name,
-        "email": a.email_id,
+        "email": decrypt_value(a.to_dict().get("email_id")) if a.to_dict().get("email_id") else None,
         "address": a.address_line1,
         "state": a.state_ut,
         "district": a.district,
-        "mobile": a.mobile_number,
+        "mobile": decrypt_value(a.to_dict().get("mobile_number")) if a.to_dict().get("mobile_number") else None,
         "coaRegistrationNumber": a.coa_registration_number
     } for a in architects]
 
@@ -62,11 +66,11 @@ def map_structural_engineers(engineers):
     return [{
         "id": e.id,
         "name": e.engineer_name,
-        "email": e.email_id,
+        "email": decrypt_value(e.to_dict().get("email_id")) if e.to_dict().get("email_id") else None,
         "address": e.address_line1,
         "state": e.state_ut,
         "district": e.district,
-        "mobile": e.mobile_number,
+        "mobile": decrypt_value(e.to_dict().get("mobile_number")) if e.to_dict().get("mobile_number") else None,
         "licenceNumber": e.licence_number
     } for e in engineers]
 
@@ -76,11 +80,11 @@ def map_contractors(contractors):
         "id": c.id,
         "name": c.contractor_name,
         "natureOfWork": c.nature_of_work,
-        "email": c.email_id,
+        "email": decrypt_value(c.to_dict().get("email_id")) if c.to_dict().get("email_id") else None,
         "address": c.address_line1,
         "state": c.state_ut,
         "district": c.district,
-        "mobile": c.mobile_number
+        "mobile": decrypt_value(c.to_dict().get("mobile_number")) if c.to_dict().get("mobile_number") else None
     } for c in contractors]
 
 
@@ -88,11 +92,11 @@ def map_accountants(accountants):
     return [{
         "id": a.id,
         "name": a.accountant_name,
-        "email": a.email_id,
+        "email": decrypt_value(a.to_dict().get("email_id")) if a.to_dict().get("email_id") else None,
         "address": a.address_line1,
         "state": a.state_ut,
         "district": a.district,
-        "mobile": a.mobile_number,
+        "mobile": decrypt_value(a.to_dict().get("mobile_number")) if a.to_dict().get("mobile_number") else None,
         "icaiMemberId": a.icai_member_id
     } for a in accountants]
 
@@ -101,11 +105,11 @@ def map_project_engineers(engineers):
     return [{
         "id": e.id,
         "name": e.engineer_name,
-        "email": e.email_id,
+        "email": decrypt_value(e.to_dict().get("email_id")) if e.to_dict().get("email_id") else None,
         "address": e.address_line1,
         "state": e.state_ut,
         "district": e.district,
-        "mobile": e.mobile_number
+        "mobile": decrypt_value(e.to_dict().get("mobile_number")) if e.to_dict().get("mobile_number") else None
     } for e in engineers]
 
 
@@ -164,7 +168,7 @@ def add_project_agent():
             rera_registration_no=data["rera_registration_no"],
             agent_name=data["agent_name"],
             agent_address=data["agent_address"],
-            mobile_number=data["mobile_number"],
+            mobile_number=data.get("mobile_number"),
         )
 
         db.session.add(agent)
@@ -212,7 +216,7 @@ def add_architect():
 
         architect = Architect(
             architect_name=data["architect_name"],
-            email_id=data.get("email_id"),
+            email_id=encrypt_value(data.get("email_id")) if data.get("email_id") else None,
             address_line1=data["address_line1"],
             address_line2=data.get("address_line2"),
             state_ut=data["state_ut"],
@@ -221,7 +225,7 @@ def add_architect():
             year_of_establishment=empty_to_none(data.get("year_of_establishment")),
             number_of_key_projects=empty_to_none(data.get("number_of_key_projects")),
             coa_registration_number=data["coa_registration_number"],
-            mobile_number=data["mobile_number"],
+            mobile_number=encrypt_value(data.get("mobile_number")) if data.get("mobile_number") else None,
         )
 
         db.session.add(architect)
@@ -272,7 +276,7 @@ def add_structural_engineer():
         engineer = Engineer(
             engineer_type="structural",
             engineer_name=data["engineer_name"],
-            email_id=data.get("email_id"),
+            email_id=encrypt_value(data.get("email_id")) if data.get("email_id") else None,
             address_line1=data["address_line1"],
             address_line2=data.get("address_line2"),
             state_ut=data["state_ut"],
@@ -285,7 +289,7 @@ def add_structural_engineer():
                 data.get("number_of_key_projects")
             ),
             licence_number=data["licence_number"],
-            mobile_number=data["mobile_number"],
+            mobile_number=encrypt_value(data.get("mobile_number")) if data.get("mobile_number") else None,
         )
 
         db.session.add(engineer)
@@ -333,7 +337,7 @@ def add_contractor():
         contractor = Contractor(
             nature_of_work=data["nature_of_work"],
             contractor_name=data["contractor_name"],
-            email_id=data.get("email_id"),
+            email_id= encrypt_value(data.get("email_id")) if data.get("email_id") else None,
 
             address_line1=data["address_line1"],
             address_line2=data.get("address_line2"),
@@ -348,7 +352,7 @@ def add_contractor():
             number_of_key_projects=empty_to_none(
                 data.get("number_of_key_projects")
             ),
-            mobile_number=str(data["mobile_number"]),
+            mobile_number=encrypt_value(data.get("mobile_number")) if data.get("mobile_number") else None,
         )
 
         # 2️⃣ Save contractor & get ID
@@ -358,7 +362,7 @@ def add_contractor():
         # 3️⃣ Link contractor to application
         link = ApplicationAssociate(
             application_number=data["application_number"],
-            pan_number=data["pan_number"],
+            pan_number=data.get("pan_number"),
             associate_type="contractor",
             associate_id=contractor.id,
         )
@@ -400,7 +404,7 @@ def add_accountant():
 
         accountant = Accountant(
             accountant_name=data["accountant_name"],
-            email_id=data.get("email_id"),
+            email_id=encrypt_value(data.get("email_id")) if data.get("email_id") else None,
             address_line1=data["address_line1"],
             address_line2=data.get("address_line2"),
             state_ut=data["state_ut"],
@@ -408,7 +412,7 @@ def add_accountant():
             pin_code=data["pin_code"],
             icai_member_id=data["icai_member_id"],
             number_of_key_projects=empty_to_none(data.get("number_of_key_projects")),
-            mobile_number=data["mobile_number"],
+            mobile_number=encrypt_value(data.get("mobile_number")) if data.get("mobile_number") else None,
         )
 
         db.session.add(accountant)
@@ -459,13 +463,13 @@ def add_project_engineer():
 
         engineer = ProjectEngineer(
             engineer_name=data["engineer_name"],
-            email_id=data.get("email_id"),
+            email_id=encrypt_value(data.get("email_id")) if data.get("email_id") else None,
             address_line1=data["address_line1"],
             address_line2=data.get("address_line2"),
             state_ut=data["state_ut"],
             district=data["district"],
             pin_code=data["pin_code"],
-            mobile_number=data["mobile_number"],
+            mobile_number=encrypt_value(data.get("mobile_number")) if data.get("mobile_number") else None,
             number_of_key_projects=empty_to_none(data.get("number_of_key_projects")),
         )
 
@@ -474,7 +478,7 @@ def add_project_engineer():
 
         link = ApplicationAssociate(
             application_number=data["application_number"],
-            pan_number=data["pan_number"],
+            pan_number=data.get("pan_number"),
             associate_type="project_engineer",
             associate_id=engineer.id
         )

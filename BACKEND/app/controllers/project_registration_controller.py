@@ -1,6 +1,7 @@
 import os
 from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
+from app.utils.encryption import encrypt_value, decrypt_value
 from app.models.project_registration_model import (
     insert_project_registration,
     get_project_registration
@@ -28,6 +29,10 @@ def save_file(file, subfolder):
   
     # store relative path in DB
     return f"uploads/{subfolder}/{filename}"
+
+
+def empty_to_none(value):
+    return None if value in ("", None) else value
         
 @project_registration_bp.route("/project-registration", methods=["POST"])
 def project_registration():
@@ -37,7 +42,7 @@ def project_registration():
 
         data = {
             "application_number": form.get("applicationNumber"),
-            "pan_number": form.get("panNumber"),
+            "pan_number": encrypt_value(form.get("panNumber")),  # Encrypt PAN before storing
 
             "project_name": form.get("projectName"),
             "project_description": form.get("projectDescription"),
@@ -50,22 +55,22 @@ def project_registration():
             "date_of_commencement": form.get("dateOfCommencement"),
             "proposed_completion_date": form.get("proposedCompletionDate"),
 
-            "total_area_of_land": form.get("totalAreaOfLand"),
-            "building_height": form.get("buildingHeight"),
-            "total_plinth_area": form.get("totalPlinthArea"),
-            "total_built_up_area": form.get("totalBuiltUpArea"),
+            "total_area_of_land": empty_to_none(form.get("totalAreaOfLand")),
+            "building_height": empty_to_none(form.get("buildingHeight")),
+            "total_plinth_area": empty_to_none(form.get("totalPlinthArea")),
+            "total_built_up_area": empty_to_none(form.get("totalBuiltUpArea")),
 
-            "garages_available_for_sale": form.get("garagesAvailableForSale"),
-            "total_garage_area": form.get("totalGarageArea"),
-            "open_parking_spaces": form.get("openParkingSpaces"),
-            "total_open_parking_area": form.get("totalOpenParkingArea"),
-            "covered_parking_spaces": form.get("coveredParkingSpaces"),
-            "total_covered_parking_area": form.get("totalCoveredParkingArea"),
+            "garages_available_for_sale": empty_to_none(form.get("garagesAvailableForSale")),
+            "total_garage_area": empty_to_none(form.get("totalGarageArea")),
+            "open_parking_spaces": empty_to_none(form.get("openParkingSpaces")),
+            "total_open_parking_area": empty_to_none(form.get("totalOpenParkingArea")),
+            "covered_parking_spaces": empty_to_none(form.get("coveredParkingSpaces")),
+            "total_covered_parking_area": empty_to_none(form.get("totalCoveredParkingArea")),
 
-            "estimated_construction_cost": form.get("estimatedConstructionCost"),
-            "cost_of_land": form.get("costOfLand"),
-            "total_open_area": form.get("totalOpenArea"),
-            "total_project_cost": form.get("totalProjectCost"),
+            "estimated_construction_cost": empty_to_none(form.get("estimatedConstructionCost")),
+            "cost_of_land": empty_to_none(form.get("costOfLand")),
+            "total_open_area": empty_to_none(form.get("totalOpenArea")),
+            "total_project_cost": empty_to_none(form.get("totalProjectCost")),
 
             "project_address1": form.get("projectAddress1"),
             "project_address2": form.get("projectAddress2"),
@@ -90,11 +95,11 @@ def project_registration():
             "local_pincode": form.get("localPincode"),
             "project_website_url": form.get("projectWebsiteURL"),
 
-            "development_completed": form.get("developmentCompleted"),
-            "development_pending": form.get("developmentPending"),
-            "amount_collected": form.get("amountCollected"),
-            "amount_spent": form.get("amountSpent"),
-            "balance_amount": form.get("balanceAmount"),
+            "development_completed": empty_to_none(form.get("developmentCompleted")),
+            "development_pending": empty_to_none(form.get("developmentPending")),
+            "amount_collected": empty_to_none(form.get("amountCollected")),
+            "amount_spent": empty_to_none(form.get("amountSpent")),
+            "balance_amount": empty_to_none(form.get("balanceAmount")),
             "plan_modified": form.get("planModified") == "true",
 
             "architect_certificate_path": save_file(files.get("architectCertificate"), "certificates"),
@@ -102,20 +107,35 @@ def project_registration():
             "ca_certificate_path": save_file(files.get("caCertificate"), "certificates"),
 
             "project_delayed": form.get("projectDelayed") == "true",
-            "number_of_units": form.get("numberOfUnits"),
-            "units_advance_taken": form.get("unitsAdvanceTaken"),
-            "units_agreement_sale": form.get("unitsAgreementSale"),
-            "units_sold": form.get("unitsSold"),
+            "number_of_units": empty_to_none(form.get("numberOfUnits")),
+            "units_advance_taken": empty_to_none(form.get("unitsAdvanceTaken")),
+            "units_agreement_sale": empty_to_none(form.get("unitsAgreementSale")),
+            "units_sold": empty_to_none(form.get("unitsSold")),
 
             "legal_declaration_accepted": form.get("legalDeclarationAccepted") == "true",
         }
 
+        existing = get_project_registration(
+            data["application_number"],
+            form.get("panNumber")
+        )
+        
+        if existing:
+            return jsonify({
+                "success": True,
+                "message": "Already Saved"
+            }), 200
+        
         insert_project_registration(data)
 
         return jsonify({"message": "Project registered successfully"}), 201
-
     except Exception as e:
-        return jsonify({"error": "Internal server error"}), 500
+        import traceback
+        traceback.print_exc()
+    
+        return jsonify({
+            "error": str(e)
+        }), 500
     
     # =====================================
 # CHECK + FETCH API  (MAIN API YOU WANT)
@@ -143,8 +163,21 @@ def get_project_by_application():
         )
 
 
-        # ✅ If exists → send data
+        # ✅ If exists → send data with decrypted fields
         if result:
+            # Decrypt encrypted fields
+            if result.get("pan_number"):
+                result["pan_number"] = decrypt_value(result["pan_number"])
+            if result.get("account_no"):
+                result["account_no"] = decrypt_value(result["account_no"])
+            if result.get("ifsc"):
+                result["ifsc"] = decrypt_value(result["ifsc"])
+            if result.get("aadhaar"):
+                result["aadhaar"] = decrypt_value(result["aadhaar"])
+            if result.get("mobile"):
+                result["mobile"] = decrypt_value(result["mobile"])
+            if result.get("email"):
+                result["email"] = decrypt_value(result["email"])
 
             return jsonify({
                 "exists": True,
@@ -186,7 +219,27 @@ def get_project_registration_details():
                 "message": "applicationNumber and panNumber required"
             }), 400
 
+        print("Application Number:", application_number)
+        print("PAN Number:", pan_number)
+
         result = get_project_registration(application_number, pan_number)
+
+        print("Result:", result)
+
+        # Decrypt encrypted fields if result exists
+        if result:
+            if result.get("pan_number"):
+                result["pan_number"] = decrypt_value(result["pan_number"])
+            if result.get("account_no"):
+                result["account_no"] = decrypt_value(result["account_no"])
+            if result.get("ifsc"):
+                result["ifsc"] = decrypt_value(result["ifsc"])
+            if result.get("aadhaar"):
+                result["aadhaar"] = decrypt_value(result["aadhaar"])
+            if result.get("mobile"):
+                result["mobile"] = decrypt_value(result["mobile"])
+            if result.get("email"):
+                result["email"] = decrypt_value(result["email"])
 
         return jsonify({
             "success": True,
@@ -379,3 +432,4 @@ def planning_dashboard_all_by_type():
         "success": True,
         "data": data
     }), 200
+    

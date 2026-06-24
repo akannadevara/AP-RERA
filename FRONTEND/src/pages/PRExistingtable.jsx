@@ -31,10 +31,18 @@ const PRExistingtable = () => {
         );
 
         if (json.success) {
-          setRows(json.data);
-        } else {
-          setRows([]);
-        }
+    console.log("API Response:", json);
+
+    setRows(
+        Array.isArray(json.data)
+            ? json.data
+            : json.data
+            ? [json.data]
+            : []
+    );
+} else {
+    setRows([]);
+}
       } catch (err) {
         console.error(err);
         setRows([]);

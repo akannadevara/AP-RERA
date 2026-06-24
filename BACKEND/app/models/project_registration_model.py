@@ -1,5 +1,6 @@
 from app.models.database import db
 from sqlalchemy import text
+from app.utils.encryption import decrypt_value
 
 
 # ---------------------------------------------------------
@@ -85,19 +86,32 @@ def get_project_registration(application_number, pan_number):
         SELECT *
         FROM project_registration
         WHERE application_number = :application_number
-        AND pan_number = :pan_number
         LIMIT 1
     """)
 
     result = db.session.execute(
         query,
         {
-            "application_number": application_number,
-            "pan_number": pan_number
+            "application_number": application_number
         }
     ).mappings().first()
 
-    return dict(result) if result else None
+    if not result:
+        return None
+
+    result = dict(result)
+
+    # Compare decrypted PAN with entered PAN
+    if result.get("pan_number"):
+        db_pan = decrypt_value(result["pan_number"])
+
+        print("DB PAN:", db_pan)
+        print("Entered PAN:", pan_number)
+
+        if db_pan.strip().upper() != pan_number.strip().upper():
+            return None
+
+    return result
 # ---------------------------------------------------------
 # FETCH PROJECT REGISTRATION (NEW - FOR PREVIEW & PDF)
 # ---------------------------------------------------------

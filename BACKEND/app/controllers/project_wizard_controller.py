@@ -3,6 +3,7 @@ from flask import Blueprint, request, jsonify, current_app
 from werkzeug.utils import secure_filename
 from app.models.project_wizard import ProjectWizardModel
 from app.models.database import db
+from app.utils.encryption import encrypt_value, decrypt_value
 
 def clean(value):
     if value == "" or value is None:
@@ -86,19 +87,19 @@ def create_project_registration():
     mapped_data = {
         "application_no": data.get("applicationNo"),
         "promoter_type": data.get("promoterType", "individual"),
-        "pan_number": data.get("panNumber"),
+        "pan_number": encrypt_value(data.get("panNumber")),
         "bank_state": data.get("bankState"),
         "bank_name": data.get("bankName"),
         "branch_name": data.get("branchName"),
-        "account_no": data.get("accountNo"),
+        "account_no": encrypt_value(data.get("accountNo")),
         "account_holder": data.get("accountHolder"),
-        "ifsc": data.get("ifsc"),
+        "ifsc": encrypt_value(data.get("ifsc")),
         "name": data.get("name"),
         "father_name": data.get("fatherName"),
-        "aadhaar": data.get("aadhaar"),
-        "mobile": data.get("mobile"),
+        "aadhaar": encrypt_value(data.get("aadhaar")),
+        "mobile": encrypt_value(data.get("mobile")),
         "landline": data.get("landline"),
-        "email": data.get("email"),
+        "email": encrypt_value(data.get("email")),
         "promoter_website": data.get("promoterWebsite"),
         "state_ut": data.get("stateUT"),
         "district": data.get("district"),
@@ -133,9 +134,9 @@ def create_project_registration():
         "promoter2_name": data.get("promoter2Name"),
         "promoter2_address_line1": data.get("promoter2AddressLine1"),
         "promoter2_address_line2": data.get("promoter2AddressLine2"),
-        "promoter2_mobile": data.get("promoter2Mobile"),
-        "promoter2_email": data.get("promoter2Email"),
-        "promoter2_pan_card": data.get("promoter2PanCard"),
+        "promoter2_mobile": encrypt_value(data.get("promoter2Mobile")) if data.get("promoter2Mobile") else None,
+        "promoter2_email": encrypt_value(data.get("promoter2Email")) if data.get("promoter2Email") else None,
+        "promoter2_pan_card": encrypt_value(data.get("promoter2PanCard")) if data.get("promoter2PanCard") else None,
     }
 
     # Merge uploaded file paths into mapped_data
@@ -170,7 +171,10 @@ def get_project_registrations():
                 "id": r.id,
                 "application_no": r.application_no,
                 "name": r.name,
-                "email": r.email,
+                "email": decrypt_value(r.email) if r.email else None,
+                "mobile": decrypt_value(r.mobile) if r.mobile else None,
+                "pan_number": decrypt_value(r.pan_number) if r.pan_number else None,
+                "aadhaar": decrypt_value(r.aadhaar) if r.aadhaar else None,
                 "created_at": str(r.created_at)
             } for r in rows
         ])
@@ -197,19 +201,19 @@ def get_project_registration(application_no):
             "id": row.id,
             "application_no": row.application_no,
             "promoter_type": row.promoter_type,
-            "pan_number": row.pan_number,
+            "pan_number": decrypt_value(row.pan_number) if row.pan_number else None,
             "bank_state": row.bank_state,
             "bank_name": row.bank_name,
             "branch_name": row.branch_name,
-            "account_no": row.account_no,
+            "account_no": decrypt_value(row.account_no) if row.account_no else None,
             "account_holder": row.account_holder,
-            "ifsc": row.ifsc,
+            "ifsc": decrypt_value(row.ifsc) if row.ifsc else None,
             "name": row.name,
             "father_name": row.father_name,
-            "aadhaar": row.aadhaar,
-            "mobile": row.mobile,
+            "aadhaar": decrypt_value(row.aadhaar) if row.aadhaar else None,
+            "mobile": decrypt_value(row.mobile) if row.mobile else None,
             "landline": row.landline,
-            "email": row.email,
+            "email": decrypt_value(row.email) if row.email else None,
             "promoter_website": row.promoter_website,
             "state_ut": row.state_ut,
             "district": row.district,
@@ -244,9 +248,9 @@ def get_project_registration(application_no):
             "promoter2_name": row.promoter2_name,
             "promoter2_address_line1": row.promoter2_address_line1,
             "promoter2_address_line2": row.promoter2_address_line2,
-            "promoter2_mobile": row.promoter2_mobile,
-            "promoter2_email": row.promoter2_email,
-            "promoter2_pan_card": row.promoter2_pan_card,
+            "promoter2_mobile": decrypt_value(row.promoter2_mobile) if row.promoter2_mobile else None,
+            "promoter2_email": decrypt_value(row.promoter2_email) if row.promoter2_email else None,
+            "promoter2_pan_card": decrypt_value(row.promoter2_pan_card) if row.promoter2_pan_card else None,
 
             # File paths
             "pan_file": row.pan_file,

@@ -1,6 +1,7 @@
 from app.models.database import db
 from datetime import datetime
 import json
+from app.utils.encryption import decrypt_value
 
 
 class AgentOtherThanIndividualOrganisation(db.Model):
@@ -98,15 +99,15 @@ class AgentOtherThanIndividualOrganisation(db.Model):
             "registration_identifier": self.registration_identifier,
             "registration_date": self.registration_date,
             "registration_cert_doc": self.registration_cert_doc,
-            "pan_card_number": self.pan,  # mapped
+            "pan_card_number": decrypt_value(self.pan) if self.pan else None,  # mapped
             "pan_card_doc": (
                 self.pan_proof.get("file") if self.pan_proof else None
             ),  # mapped (if storing here)
             "gst_number": self.gst_number,
             "gst_doc": self.gst_doc,
             "legal_document": self.legal_document,
-            "email_id": self.email,  # mapped
-            "mobile_number": self.mobile,  # mapped
+            "email_id": decrypt_value(self.email) if self.email else None,  # mapped
+            "mobile_number": decrypt_value(self.mobile) if self.mobile else None,  # mapped
             "landline_number": self.landline,  # mapped
             "address_line1": self.address1,  # mapped
             "address_line2": self.address2,  # mapped

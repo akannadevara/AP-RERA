@@ -1,4 +1,5 @@
 from app.models.database import db
+# Store associate values as plain text; no decryption performed here
 
 from datetime import datetime
 import pytz
@@ -29,7 +30,7 @@ class AgentModel(db.Model):
             'rera_registration_no': self.rera_registration_no,
             'agent_name': self.agent_name,
             'agent_address': self.agent_address,
-            'mobile_number': self.mobile_number,
+            'mobile_number': self.mobile_number if self.mobile_number else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

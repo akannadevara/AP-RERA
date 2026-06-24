@@ -11,7 +11,7 @@ import ProjectMaterialFacts from "../components/ExistingProjectMaterialFacts";
 import LegalDeclaration from "../components/ExistingLegalDeclaration";
 import ProjectConstructionStatus from "../components/ExistingProjectConstructionStatus";
 
-import OtherThanIndividualAuthorizedSignatory 
+import OtherThanIndividualAuthorizedSignatory
   from "../components/OtherThanIndividualAuthorizedSignatory";
 
 import { apiPost, apiPut, apiGet } from "../api/api";
@@ -23,15 +23,15 @@ const ExistingProjectDetails = () => {
 
   let panNumber =
     location.state?.panNumber ||
-    sessionStorage.getItem("panNumber")||"SUNIL0000K";
+    sessionStorage.getItem("panNumber") || "SUNIL0000K";
 
   let applicationNumber =
     location.state?.applicationNumber ||
-    sessionStorage.getItem("applicationNumber")||"100126273336";
+    sessionStorage.getItem("applicationNumber") || "100126273336";
 
   let promoterType =
-   location.state?.promoterType ||
-   sessionStorage.getItem("promoterType")||"other";
+    location.state?.promoterType ||
+    sessionStorage.getItem("promoterType") || "other";
 
 
   /* ===============================
@@ -100,16 +100,16 @@ const ExistingProjectDetails = () => {
 
     // ✅ Add these new fields
 
-  authorizedSignatoryName: "",
-  authorizedSignatoryMobile: "",
-  authorizedSignatoryEmail: "",
-  isExistingDirector: "",
+    authorizedSignatoryName: "",
+    authorizedSignatoryMobile: "",
+    authorizedSignatoryEmail: "",
+    isExistingDirector: "",
 
-  authorizedSignatoryPhoto: null,
-  authorizedSignatoryPhotoPath: "",
+    authorizedSignatoryPhoto: null,
+    authorizedSignatoryPhotoPath: "",
 
-  boardResolutionCopy: null,
-  boardResolutionCopyPath: "",
+    boardResolutionCopy: null,
+    boardResolutionCopyPath: "",
 
 
     developmentCompleted: "",
@@ -155,14 +155,14 @@ const ExistingProjectDetails = () => {
   =============================== */
 
   useEffect(() => {
-  sessionStorage.setItem("panNumber", panNumber);
-  sessionStorage.setItem("applicationNumber", applicationNumber);
+    sessionStorage.setItem("panNumber", panNumber);
+    sessionStorage.setItem("applicationNumber", applicationNumber);
 
-  if (promoterType) {
-    sessionStorage.setItem("promoterType", promoterType);
-  }
+    if (promoterType) {
+      sessionStorage.setItem("promoterType", promoterType);
+    }
 
-}, [panNumber, applicationNumber, promoterType]);
+  }, [panNumber, applicationNumber, promoterType]);
   /* ===============================
      LOAD EXISTING PROJECT
   =============================== */
@@ -173,12 +173,15 @@ const ExistingProjectDetails = () => {
 
       try {
 
-       const endpoint =
-  promoterType === "other"
-    ? `/api/othertheninduvidual-project-registration/details?applicationNumber=${applicationNumber}&panNumber=${panNumber}`
-    : `/api/project-registration/details?applicationNumber=${applicationNumber}&panNumber=${panNumber}`;
+        const endpoint =
+          promoterType === "other"
+            ? `/api/othertheninduvidual-project-registration/details?applicationNumber=${applicationNumber}&panNumber=${panNumber}`
+            : `/api/project-registration/details?applicationNumber=${applicationNumber}&panNumber=${panNumber}`;
 
-const res = await apiGet(endpoint);
+
+        console.log("Application Number:", applicationNumber);
+        console.log("PAN Number:", panNumber);
+        const res = await apiGet(endpoint);
 
         console.log("FETCH RESPONSE:", res);
 
@@ -253,13 +256,13 @@ const res = await apiGet(endpoint);
             localPincode: d.local_pincode || "",
 
 
-           authorizedSignatoryName: d.authorized_signatory_name || "",
-           authorizedSignatoryMobile: d.authorized_signatory_mobile || "",
-           authorizedSignatoryEmail: d.authorized_signatory_email || "",
-           isExistingDirector: d.is_existing_director || "",
+            authorizedSignatoryName: d.authorized_signatory_name || "",
+            authorizedSignatoryMobile: d.authorized_signatory_mobile || "",
+            authorizedSignatoryEmail: d.authorized_signatory_email || "",
+            isExistingDirector: d.is_existing_director || "",
 
-          authorizedSignatoryPhotoPath: d.authorized_signatory_photo_path || "",
-          boardResolutionCopyPath: d.board_resolution_copy_path || "",
+            authorizedSignatoryPhotoPath: d.authorized_signatory_photo_path || "",
+            boardResolutionCopyPath: d.board_resolution_copy_path || "",
 
 
             developmentCompleted: d.development_completed || "",
@@ -311,11 +314,11 @@ const res = await apiGet(endpoint);
 
   const totalOpenArea =
     Number(formData.totalAreaOfLand) > 0 &&
-    Number(formData.totalPlinthArea) > 0
+      Number(formData.totalPlinthArea) > 0
       ? (
-          Number(formData.totalAreaOfLand) -
-          Number(formData.totalPlinthArea)
-        ).toFixed(2)
+        Number(formData.totalAreaOfLand) -
+        Number(formData.totalPlinthArea)
+      ).toFixed(2)
       : "";
 
   const totalProjectCost = (
@@ -350,156 +353,159 @@ const res = await apiGet(endpoint);
   /* ===============================
      SUBMIT
   =============================== */
-// const handleSubmit = async (e) => {
-//   e.preventDefault();
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
 
-//   if (!formData.legalDeclarationAccepted) {
-//     alert("Accept legal declaration");
-//     return;
-//   }
+  //   if (!formData.legalDeclarationAccepted) {
+  //     alert("Accept legal declaration");
+  //     return;
+  //   }
 
-//   const payload = {
-//   ...formData,
-//   panNumber,
-//   applicationNumber,
-//   totalOpenArea,
-//   totalProjectCost,
-// };
+  //   const payload = {
+  //   ...formData,
+  //   panNumber,
+  //   applicationNumber,
+  //   totalOpenArea,
+  //   totalProjectCost,
+  // };
 
-//   try {
-//     // ✅ ALWAYS CALL SAME API
-//     // ✅ If project exists → UPDATE
-// if (promoterType === "other") {
+  //   try {
+  //     // ✅ ALWAYS CALL SAME API
+  //     // ✅ If project exists → UPDATE
+  // if (promoterType === "other") {
 
-//   if (isExistingProject) {
-//     await apiPut(
-//       "/api/othertheninduvidual-project-registration/update",
-//       payload
-//     );
-//   } else {
-//     await apiPost(
-//       "/api/othertheninduvidual-project-registration",
-//       payload
-//     );
-//   }
+  //   if (isExistingProject) {
+  //     await apiPut(
+  //       "/api/othertheninduvidual-project-registration/update",
+  //       payload
+  //     );
+  //   } else {
+  //     await apiPost(
+  //       "/api/othertheninduvidual-project-registration",
+  //       payload
+  //     );
+  //   }
 
-// } else {
+  // } else {
 
-//   if (isExistingProject) {
-//     const formDataToSend = new FormData();
+  //   if (isExistingProject) {
+  //     const formDataToSend = new FormData();
 
-// // append normal fields
-// Object.keys(formData).forEach((key) => {
-//   if (formData[key] !== null && formData[key] !== undefined) {
-//     formDataToSend.append(key, formData[key]);
-//   }
-// });
+  // // append normal fields
+  // Object.keys(formData).forEach((key) => {
+  //   if (formData[key] !== null && formData[key] !== undefined) {
+  //     formDataToSend.append(key, formData[key]);
+  //   }
+  // });
 
-// formDataToSend.append("panNumber", panNumber);
-// formDataToSend.append("applicationNumber", applicationNumber);
-// formDataToSend.append("totalOpenArea", totalOpenArea);
-// formDataToSend.append("totalProjectCost", totalProjectCost);
+  // formDataToSend.append("panNumber", panNumber);
+  // formDataToSend.append("applicationNumber", applicationNumber);
+  // formDataToSend.append("totalOpenArea", totalOpenArea);
+  // formDataToSend.append("totalProjectCost", totalProjectCost);
 
-// const response = await fetch(
-//   "https://bs20m5dw-8080.inc1.devtunnels.ms/api/project-registration/update",
-//   {
-//     method: "PUT",
-//     body: formDataToSend,
-//   }
-// );
+  // const response = await fetch(
+  //   "https://bs20m5dw-8080.inc1.devtunnels.ms/api/project-registration/update",
+  //   {
+  //     method: "PUT",
+  //     body: formDataToSend,
+  //   }
+  // );
 
-// if (!response.ok) {
-//   throw new Error("Update failed");
-// }
-//   } else {
-//     await apiPost("/api/project-registration", payload);
-//   }
+  // if (!response.ok) {
+  //   throw new Error("Update failed");
+  // }
+  //   } else {
+  //     await apiPost("/api/project-registration", payload);
+  //   }
 
-// }
+  // }
 
-// setSaveSuccessMsg("Project details saved successfully");
-//     navigate("/existing-development-details", {
-//       state: { panNumber, applicationNumber },
-//     });
+  // setSaveSuccessMsg("Project details saved successfully");
+  //     navigate("/existing-development-details", {
+  //       state: { panNumber, applicationNumber },
+  //     });
 
-//   } catch (err) {
-//     console.error("Submit Error:", err);
-//     alert(err.message || "Save failed");
-//   }
-// };
+  //   } catch (err) {
+  //     console.error("Submit Error:", err);
+  //     alert(err.message || "Save failed");
+  //   }
+  // };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (!formData.legalDeclarationAccepted) {
-    alert("Accept legal declaration");
-    return;
-  }
-
-  try {
-
-    const formDataToSend = new FormData();
-
-    Object.keys(formData).forEach((key) => {
-      if (formData[key] !== null && formData[key] !== undefined) {
-        formDataToSend.append(key, formData[key]);
-      }
-    });
-
-    formDataToSend.append("panNumber", panNumber);
-    formDataToSend.append("applicationNumber", applicationNumber);
-    formDataToSend.append("totalOpenArea", totalOpenArea);
-    formDataToSend.append("totalProjectCost", totalProjectCost);
-
-    if (promoterType === "other") {
-
-      if (isExistingProject) {
-
-         await apiPut(
-          "/api/othertheninduvidual-project-registration/update",
-          formDataToSend
-        );
-      } else {
-
-        await apiPost(
-          "/api/othertheninduvidual-project-registration",
-          Object.fromEntries(formDataToSend)
-        );
-
-      }
-
-    } else {
-
-      if (isExistingProject) {
-
-      await apiPut(
-        "/api/project-registration/update",
-        formDataToSend
-      );
-      
-      } else {
-        await apiPost("/api/project-registration", Object.fromEntries(formDataToSend));
-      }
-
+    if (!formData.legalDeclarationAccepted) {
+      alert("Accept legal declaration");
+      return;
     }
 
-    setSaveSuccessMsg("Project details saved successfully");
+    try {
 
-    navigate("/existing-development-details", {
-  state: { 
-    panNumber, 
-    applicationNumber,
-    promoterType
-  },
-});
+      const formDataToSend = new FormData();
 
-  } catch (err) {
+      Object.keys(formData).forEach((key) => {
+        if (formData[key] !== null && formData[key] !== undefined) {
+          formDataToSend.append(key, formData[key]);
+        }
+      });
 
-    console.error("Submit Error:", err);
-    alert(err.message || "Save failed");
+      formDataToSend.append("panNumber", panNumber);
+      formDataToSend.append("applicationNumber", applicationNumber);
+      formDataToSend.append("totalOpenArea", totalOpenArea);
+      formDataToSend.append("totalProjectCost", totalProjectCost);
 
-  }
-};
+      if (promoterType === "other") {
+
+        if (isExistingProject) {
+
+          await apiPut(
+            "/api/othertheninduvidual-project-registration/update",
+            formDataToSend
+          );
+        } else {
+
+          await apiPost(
+            "/api/othertheninduvidual-project-registration",
+            formDataToSend
+          );
+
+        }
+
+      } else {
+
+        if (isExistingProject) {
+
+          await apiPut(
+            "/api/project-registration/update",
+            formDataToSend
+          );
+
+        } else {
+          await apiPost(
+            "/api/project-registration",
+            formDataToSend
+          );
+        }
+
+      }
+
+      setSaveSuccessMsg("Project details saved successfully");
+
+      navigate("/existing-development-details", {
+        state: {
+          panNumber,
+          applicationNumber,
+          promoterType
+        },
+      });
+
+    } catch (err) {
+
+      console.error("Submit Error:", err);
+      alert(err.message || "Save failed");
+
+    }
+  };
   /* ===============================
      RENDER
   =============================== */
@@ -509,20 +515,20 @@ const handleSubmit = async (e) => {
     <div className="project-details-container">
 
       <ProjectWizard currentStep={2} />
-      
-       {fetchSuccessMsg && (
-  <div className="alert alert-success">
-    {fetchSuccessMsg}
-  </div>
-)}
 
-{saveSuccessMsg && (
-  <div className="alert alert-success">
-    {saveSuccessMsg}
-  </div>
-)}
+      {fetchSuccessMsg && (
+        <div className="alert alert-success">
+          {fetchSuccessMsg}
+        </div>
+      )}
 
-      
+      {saveSuccessMsg && (
+        <div className="alert alert-success">
+          {saveSuccessMsg}
+        </div>
+      )}
+
+
 
       <form onSubmit={handleSubmit} className="project-form">
 
@@ -541,18 +547,18 @@ const handleSubmit = async (e) => {
           formData={formData}
           handleInputChange={handleInputChange}
         />
-        
+
         {promoterType === "other" && (
-        <OtherThanIndividualAuthorizedSignatory
-        formData={formData}
-        handleInputChange={handleInputChange}
-        handleFileChange={handleFileChange}
-        />
+          <OtherThanIndividualAuthorizedSignatory
+            formData={formData}
+            handleInputChange={handleInputChange}
+            handleFileChange={handleFileChange}
+          />
         )}
 
 
 
-       {["0", "3", ""].includes(formData.projectStatus) && (
+        {["0", "3", ""].includes(formData.projectStatus) && (
 
 
           <ProjectConstructionStatus

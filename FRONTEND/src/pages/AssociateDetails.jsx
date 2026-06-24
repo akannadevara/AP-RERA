@@ -56,7 +56,7 @@ const AssociateDetails = () => {
       sessionStorage.setItem("applicationNumber", applicationNumber);
     }
     if (panNumber) {
-      sessionStorage.setItem("panNumber", panNumber) ;
+      sessionStorage.setItem("panNumber", panNumber);
     }
   }, [applicationNumber, panNumber]);
 
@@ -89,162 +89,168 @@ const AssociateDetails = () => {
   };
 
   const fetchDistricts = async (stateId) => {
-  // 🔒 HARD GUARD (THIS IS THE FIX)
-  if (!stateId || isNaN(stateId)) {
-    console.warn("Invalid stateId, skipping district fetch:", stateId);
-    setDistricts([]);
-    return;
-  }
+    // 🔒 HARD GUARD (THIS IS THE FIX)
+    if (!stateId || isNaN(stateId)) {
+      console.warn("Invalid stateId, skipping district fetch:", stateId);
+      setDistricts([]);
+      return;
+    }
 
-  try {
-    const response = await apiGet(`/api/districts/${stateId}`);
-    setDistricts(response || []);
-  } catch (error) {
-    console.error("Error fetching districts:", error);
-    setDistricts([]);
-  }
-};
-
-
-  const fetchAssociates = async () => {
     try {
-      setLoading(true);
-      const response = await apiGet(
-        `/api/application/associates?application_number=${applicationNumber}&pan_number=${panNumber}`
-      );
-
-      if (response?.success) {
-        setAssociates(response.data);
-      }
+      const response = await apiGet(`/api/districts/${stateId}`);
+      setDistricts(response || []);
     } catch (error) {
-      console.error("Error fetching associates:", error);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching districts:", error);
+      setDistricts([]);
     }
   };
 
-  // -----------------------------
-  // NAVIGATION
-  // -----------------------------
-  const handleSaveAndContinue = () => {
-    navigate("/project-upload-documents", {
-      state: { applicationNumber, panNumber },
-    });
-  };
 
-  // -----------------------------
-  // SAFETY CHECK
-  // -----------------------------
-  if (!applicationNumber || !panNumber) {
-    return (
-      <div className="associate-details-container">
-        <div className="error-message">
-          Missing application details. Please go back and try again.
-        </div>
-      </div>
+ const fetchAssociates = async () => {
+  try {
+    setLoading(true);
+
+    console.log("Application Number:", applicationNumber);
+    console.log("PAN Number:", panNumber);
+
+    const response = await apiGet(
+      `/api/application/associates?application_number=${applicationNumber}&pan_number=${panNumber}`
     );
-  }
 
-  // -----------------------------
-  // RENDER
-  // -----------------------------
+    console.log("API Response:", response);
+
+    if (response?.success) {
+      setAssociates(response.data);
+    }
+  } catch (error) {
+    console.error("Error fetching associates:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
+// -----------------------------
+// NAVIGATION
+// -----------------------------
+const handleSaveAndContinue = () => {
+  navigate("/project-upload-documents", {
+    state: { applicationNumber, panNumber },
+  });
+};
+
+// -----------------------------
+// SAFETY CHECK
+// -----------------------------
+if (!applicationNumber || !panNumber) {
   return (
     <div className="associate-details-container">
-       {/* ✅ ADD HERE */}
-    <ProjectWizard currentStep={4} type="individual" />
-      <div className="breadcrumb">
-        Home / Project Registration / Associate Details
-      </div>
-
-      <h2 className="page-title">Associate Details</h2>
-
-      {loading && <div className="loading-spinner">Loading...</div>}
-
-      {/* ---------------- DEBUG / COUNTS ---------------- */}
-      <div className="debug-panel">
-        <div><strong>Application:</strong> {applicationNumber}</div>
-        <div><strong>PAN:</strong> {panNumber}</div>
-        <div className="debug-grid">
-          <div>Agents: {associates.agents.length}</div>
-          <div>Architects: {associates.architects.length}</div>
-          <div>Engineers: {associates.engineers.length}</div>
-          <div>Contractors: {associates.contractors.length}</div>
-          <div>Accountants: {associates.accountants.length}</div>
-          <div>Project Engineers: {associates.project_engineers.length}</div>
-        </div>
-      </div>
-
-      {/* ---------------- MODULES ---------------- */}
-
-      <ProjectAgent
-        applicationNumber={applicationNumber}
-        panNumber={panNumber}
-        agents={associates.agents}
-        onUpdate={fetchAssociates}
-      />
-
-      <Architects
-        states={states}
-        districts={districts}
-        applicationNumber={applicationNumber}
-        panNumber={panNumber}
-        architects={associates.architects}
-        onStateChange={fetchDistricts}
-        onUpdate={fetchAssociates}
-      />
-
-      <StructuralEngineers
-        states={states}
-        districts={districts}
-        applicationNumber={applicationNumber}
-        panNumber={panNumber}
-        engineers={associates.engineers}
-        onStateChange={fetchDistricts}
-        onUpdate={fetchAssociates}
-      />
-
-      <ProjectContractors
-        states={states}
-        districts={districts}
-        applicationNumber={applicationNumber}
-        panNumber={panNumber}
-        contractors={associates.contractors}
-        onStateChange={fetchDistricts}
-        onUpdate={fetchAssociates}
-      />
-
-      <CharteredAccountant
-        states={states}
-        districts={districts}
-        applicationNumber={applicationNumber}
-        panNumber={panNumber}
-        accountants={associates.accountants}
-        onStateChange={fetchDistricts}
-        onUpdate={fetchAssociates}
-      />
-
-      <ProjectEngineers
-        states={states}
-        districts={districts}
-        applicationNumber={applicationNumber}
-        panNumber={panNumber}
-        engineers={associates.project_engineers}
-        onStateChange={fetchDistricts}
-        onUpdate={fetchAssociates}
-      />
-
-      {/* ---------------- SAVE ---------------- */}
-      <div className="button-container">
-        <button
-          className="btn-save-continue"
-          onClick={handleSaveAndContinue}
-          disabled={loading}
-        >
-          Save and Continue
-        </button>
+      <div className="error-message">
+        Missing application details. Please go back and try again.
       </div>
     </div>
   );
+}
+
+// -----------------------------
+// RENDER
+// -----------------------------
+return (
+  <div className="associate-details-container">
+    {/* ✅ ADD HERE */}
+    <ProjectWizard currentStep={4} type="individual" />
+    <div className="breadcrumb">
+      Home / Project Registration / Associate Details
+    </div>
+
+    <h2 className="page-title">Associate Details</h2>
+
+    {loading && <div className="loading-spinner">Loading...</div>}
+
+    {/* ---------------- DEBUG / COUNTS ---------------- */}
+    <div className="debug-panel">
+      <div><strong>Application:</strong> {applicationNumber}</div>
+      <div><strong>PAN:</strong> {panNumber}</div>
+      <div className="debug-grid">
+        <div>Agents: {associates.agents.length}</div>
+        <div>Architects: {associates.architects.length}</div>
+        <div>Engineers: {associates.engineers.length}</div>
+        <div>Contractors: {associates.contractors.length}</div>
+        <div>Accountants: {associates.accountants.length}</div>
+        <div>Project Engineers: {associates.project_engineers.length}</div>
+      </div>
+    </div>
+
+    {/* ---------------- MODULES ---------------- */}
+
+    <ProjectAgent
+      applicationNumber={applicationNumber}
+      panNumber={panNumber}
+      agents={associates.agents}
+      onUpdate={fetchAssociates}
+    />
+
+    <Architects
+      states={states}
+      districts={districts}
+      applicationNumber={applicationNumber}
+      panNumber={panNumber}
+      architects={associates.architects}
+      onStateChange={fetchDistricts}
+      onUpdate={fetchAssociates}
+    />
+
+    <StructuralEngineers
+      states={states}
+      districts={districts}
+      applicationNumber={applicationNumber}
+      panNumber={panNumber}
+      engineers={associates.engineers}
+      onStateChange={fetchDistricts}
+      onUpdate={fetchAssociates}
+    />
+
+    <ProjectContractors
+      states={states}
+      districts={districts}
+      applicationNumber={applicationNumber}
+      panNumber={panNumber}
+      contractors={associates.contractors}
+      onStateChange={fetchDistricts}
+      onUpdate={fetchAssociates}
+    />
+
+    <CharteredAccountant
+      states={states}
+      districts={districts}
+      applicationNumber={applicationNumber}
+      panNumber={panNumber}
+      accountants={associates.accountants}
+      onStateChange={fetchDistricts}
+      onUpdate={fetchAssociates}
+    />
+
+    <ProjectEngineers
+      states={states}
+      districts={districts}
+      applicationNumber={applicationNumber}
+      panNumber={panNumber}
+      engineers={associates.project_engineers}
+      onStateChange={fetchDistricts}
+      onUpdate={fetchAssociates}
+    />
+
+    {/* ---------------- SAVE ---------------- */}
+    <div className="button-container">
+      <button
+        className="btn-save-continue"
+        onClick={handleSaveAndContinue}
+        disabled={loading}
+      >
+        Save and Continue
+      </button>
+    </div>
+  </div>
+);
 };
 
 export default AssociateDetails;

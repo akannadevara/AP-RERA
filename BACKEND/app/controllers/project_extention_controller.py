@@ -1,5 +1,6 @@
 # app/controllers/project_extention_controller.py
 
+from attrs import field
 from flask import Blueprint, request, jsonify, current_app
 from app.models.database import db
 from app.models.extension_project_application_details_models import ExtensionProjectApplicationDetails
@@ -13,6 +14,7 @@ from app import mail
 from flask import send_from_directory
 from flask_jwt_extended import jwt_required
 from datetime import datetime
+from app.utils.encryption import encrypt_value, decrypt_value
 import os
 import uuid
 
@@ -142,8 +144,8 @@ def create_project_extension():
             application_number=data.get("application_number"),
             project_id=data.get("project_id"),
             project_name=data.get("project_name"),
-            promoter_pan_number=data.get("promoter_pan"),
-            promoter_email=data.get("promoter_email"),
+            promoter_pan_number=encrypt_value(data.get("promoter_pan")),
+            promoter_email=encrypt_value(data.get("promoter_email")),
 
 
             validity_from=data.get("validity_from"),
@@ -165,7 +167,7 @@ def create_project_extension():
 
             payment_status=data.get("payment_status"),
             payment_amount=data.get("payment_amount"),
-            transaction_id=data.get("transaction_id"),
+             
             payment_reference_no=data.get("payment_reference_no"),
             payment_mode=data.get("payment_mode"),
 
@@ -219,6 +221,11 @@ def create_project_extension():
 
         db.session.rollback()
 
+        print("=================================")
+        print("PROJECT EXTENSION ERROR")
+        print(str(e))
+        print("=================================")
+
         return jsonify({
             "success": False,
             "message": "Internal server error"
@@ -251,7 +258,8 @@ def get_all_project_extensions():
             {
                 "id": item.id,
                 "project_name": item.project_name,
-                "promoter_email": item.promoter_email,
+                "promoter_email": decrypt_value(item.promoter_email) if item.promoter_email else None,
+                "promoter_pan_number": decrypt_value(item.promoter_pan_number) if item.promoter_pan_number else None,
                 "application_status": item.application_status,
                 "project_district": item.project_district,
                 "created_on": str(item.created_on) if item.created_on else None
@@ -381,6 +389,12 @@ def update_project_extension(id):
             if field in data:
 
                 value = data.get(field)
+
+                if field in [
+                    "promoter_pan_number",
+                    "promoter_email"
+                ]:
+                    value = encrypt_value(value)
 
                 if field in date_fields and value:
 

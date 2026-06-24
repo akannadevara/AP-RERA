@@ -1,5 +1,6 @@
 from app.models.database import db
 from datetime import datetime
+from app.utils.encryption import decrypt_value
 
 
 class ProjectUnregisteredDetails(db.Model):
@@ -74,8 +75,8 @@ class ProjectUnregisteredDetails(db.Model):
             "fileno": self.fileno,
             "lp_no": self.lp_no,
             "owner_name": self.owner_name,
-            "owner_mobile_no": self.owner_mobile_no,
-            "owner_email": self.owner_email,
+            "owner_mobile_no": decrypt_value(self.owner_mobile_no) if self.owner_mobile_no else None,
+            "owner_email": decrypt_value(self.owner_email) if self.owner_email else None,
             "owner_builder_address": self.owner_builder_address,
             "building_address": self.building_address,
             "plot_area": float(self.plot_area) if self.plot_area else None,
@@ -114,7 +115,7 @@ class ProjectUnregisteredDetails(db.Model):
             "s4_authority_id": self.s4_authority_id,
             "s5_authority_id": self.s5_authority_id,
             "s6_authority_id": self.s6_authority_id,
-            "pan_Number": self.pan_number,
+            "pan_number": decrypt_value(self.pan_number) if self.pan_number else None,
             "secound_notice_sent_date": (
                 str(self.secound_notice_sent_date)
                 if self.secound_notice_sent_date

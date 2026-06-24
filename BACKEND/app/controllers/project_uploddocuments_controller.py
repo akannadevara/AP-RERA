@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 from app.models.database import db
 from app.models.project_upload_documents import ProjectRegistrationDocument
 from app.models.project_registration_consultant import ProjectRegistrationConsultant
+from app.utils.encryption import encrypt_value, decrypt_value
 
 logger = logging.getLogger(__name__)
 
@@ -40,8 +41,13 @@ def get_documents_consultant():
         # Fetch document record
         document_record = ProjectRegistrationDocument.query.filter_by(
             application_number=application_number,
-            pan_number=pan_number
         ).first()
+
+        if document_record:
+            db_pan = decrypt_value(document_record.pan_number)
+
+            if db_pan != pan_number:
+                document_record = None
 
         # Fetch consultant record
         consultant_record = ProjectRegistrationConsultant.query.filter_by(
@@ -66,8 +72,8 @@ def get_documents_consultant():
             consultant_data = {
                 "consultancy_name": consultant_record.consultancy_name or "",
                 "consultant_name": consultant_record.consultant_name or "",
-                "mobile_number": consultant_record.mobile_number or "",
-                "email_id": consultant_record.email_id or "",
+                "mobile_number": consultant_record.mobile_number,
+                "email_id": consultant_record.email_id,
                 "address": consultant_record.address or "",
                 "declaration_accept": consultant_record.declaration_accept or "N",
                 "note1_accept": consultant_record.note1_accept or "N",
@@ -160,8 +166,16 @@ def upload_documents():
         # Find or create record
         record = ProjectRegistrationDocument.query.filter_by(
             application_number=application_number,
-            pan_number=pan_number
         ).first()
+
+        if record:
+         db_pan = decrypt_value(record.pan_number)
+
+         if db_pan != pan_number:
+             return jsonify({
+                 "status": "error",
+                 "message": "PAN mismatch"
+             }), 404
 
         if record:
             logger.info(f"Updating existing document record")
@@ -170,7 +184,7 @@ def upload_documents():
             logger.info("Creating new document record")
             record = ProjectRegistrationDocument(
                 application_number=application_number,
-                pan_number=pan_number,
+                pan_number=encrypt_value(pan_number),
                 documents=all_documents
             )
             db.session.add(record)
@@ -222,8 +236,8 @@ def save_consultant_declaration():
             logger.info(f"Updating existing consultant record")
             record.consultancy_name = data.get("consultancy_name")
             record.consultant_name = data.get("consultant_name")
-            record.mobile_number = data.get("mobile_number")
-            record.email_id = data.get("email_id")
+            record.mobile_number = encrypt_value(data.get("mobile_number")) if data.get("mobile_number") else None
+            record.email_id = encrypt_value(data.get("email_id")) if data.get("email_id") else None
             record.address = data.get("address")
             record.declaration_name = data.get("consultant_name")  # Use consultant name
             record.declaration_accept = data.get("declaration_accept")
@@ -280,8 +294,8 @@ def update_consultant_declaration():
 
         record.consultancy_name = data.get("consultancy_name")
         record.consultant_name = data.get("consultant_name")
-        record.mobile_number = data.get("mobile_number")
-        record.email_id = data.get("email_id")
+        record.mobile_number = encrypt_value(data.get("mobile_number")) if data.get("mobile_number") else None
+        record.email_id = encrypt_value(data.get("email_id")) if data.get("email_id") else None
         record.address = data.get("address")
         record.declaration_name = data.get("consultant_name")  # Use consultant name
         record.declaration_accept = data.get("declaration_accept")
@@ -330,8 +344,14 @@ def get_project_documents_details():
         # 🔹 GET DOCUMENTS
         # =========================
         document_record = ProjectRegistrationDocument.query.filter_by(
-            application_number=application_number, pan_number=pan_number
+            application_number=application_number
         ).first()
+
+        if document_record:
+             db_pan = decrypt_value(document_record.pan_number)
+
+             if db_pan != pan_number:
+                 document_record = None
 
         # =========================
         # 🔹 GET CONSULTANT
@@ -357,6 +377,10 @@ def get_project_documents_details():
         # 🔹 FORMAT CONSULTANT
         # =========================
         consultant_data = consultant_record.to_dict() if consultant_record else {}
+
+        if consultant_data:
+            consultant_data["mobile_number"] = decrypt_value(consultant_data.get("mobile_number")) if consultant_data.get("mobile_number") else None
+            consultant_data["email_id"] = decrypt_value(consultant_data.get("email_id")) if consultant_data.get("email_id") else None
 
         # =========================
         # 🔹 FINAL RESPONSE

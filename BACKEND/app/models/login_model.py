@@ -2,12 +2,61 @@
 
 from app.models.database import db
 from sqlalchemy import text
+from app.utils.encryption import decrypt_value
+from app.models.project_wizard import ProjectRegistration
 
+# def get_emails_by_pan(pan_number):
+
+#     pan = pan_number.strip().upper()
+
+#     query = text("""
+#         SELECT DISTINCT email
+#         FROM project_registrations
+#         WHERE UPPER(TRIM(pan_number)) = :pan
+
+#         UNION
+
+#         SELECT DISTINCT authorized_signatory_email
+#         FROM promoter_profile_other_t_indv
+#         WHERE UPPER(TRIM(pan_number)) = :pan
+#     """)
+
+#     result = db.session.execute(
+#         query,
+#         {"pan": pan}
+#     ).fetchall()
+
+#     emails = [row[0] for row in result]
+
+#     return emails
+
+# def get_emails_by_pan(pan_number):
+
+#     pan = pan_number.strip().upper()
+
+#     rows = ProjectRegistration.query.all()
+
+#     emails = []
+
+#     for row in rows:
+#         try:
+#             db_pan = decrypt_value(row.pan_number)
+
+#             if db_pan.upper() == pan:
+#                 emails.append(decrypt_value(row.email))
+
+#         except Exception:
+#             pass
+
+#     return emails
 
 def get_emails_by_pan(pan_number):
 
     pan = pan_number.strip().upper()
 
+    emails = []
+
+    # OLD DATA (plain PAN)
     query = text("""
         SELECT DISTINCT email
         FROM project_registrations
@@ -25,7 +74,22 @@ def get_emails_by_pan(pan_number):
         {"pan": pan}
     ).fetchall()
 
-    emails = [row[0] for row in result]
+    if result:
+        emails.extend([row[0] for row in result])
+
+    else:
+        # NEW DATA (encrypted PAN)
+        rows = ProjectRegistration.query.all()
+
+        for row in rows:
+            try:
+                db_pan = decrypt_value(row.pan_number)
+
+                if db_pan.upper() == pan:
+                    emails.append(decrypt_value(row.email))
+
+            except Exception:
+                pass
 
     return emails
 

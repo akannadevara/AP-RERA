@@ -7,6 +7,7 @@ import pandas as pd
 from flask import Blueprint, request, jsonify
 from werkzeug.utils import secure_filename
 from app.models.development_details import DevelopmentDetailsModel
+from app.utils.encryption import encrypt_value
 
 development_details_bp = Blueprint("development_details_bp", __name__)
 
@@ -90,7 +91,7 @@ def save_development_details():
             "other_external_works": json.dumps(other_external_works, default=str),
             "work_description": work_description,
             "work_type": work_type,
-            "pan_number": pan_number,
+            "pan_number": encrypt_value(pan_number) if pan_number else pan_number,
             "application_number": application_number
         })
 

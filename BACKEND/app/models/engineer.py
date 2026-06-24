@@ -1,5 +1,6 @@
 from app.models.database import db
 from datetime import datetime
+# Store associate values as plain text; no decryption performed here
 
 class Engineer(db.Model):
     __tablename__ = 'engineers'
@@ -26,7 +27,7 @@ class Engineer(db.Model):
             'id': self.id,
             'engineer_type': self.engineer_type,
             'engineer_name': self.engineer_name,
-            'email_id': self.email_id,
+            'email_id': self.email_id if self.email_id else None,
             'address_line1': self.address_line1,
             'address_line2': self.address_line2,
             'state_ut': self.state_ut,
@@ -35,7 +36,7 @@ class Engineer(db.Model):
             'year_of_establishment': self.year_of_establishment,
             'number_of_key_projects': self.number_of_key_projects,
             'licence_number': self.licence_number,
-            'mobile_number': self.mobile_number,
+            'mobile_number': self.mobile_number if self.mobile_number else None,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
         }

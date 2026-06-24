@@ -2,6 +2,7 @@
 
 from app.models.database import db
 from sqlalchemy.sql import func
+from app.utils.encryption import decrypt_value
 
 
 class ExtensionProjectApplicationDetails(db.Model):
@@ -13,8 +14,8 @@ class ExtensionProjectApplicationDetails(db.Model):
     application_number = db.Column(db.String(100))
     project_id = db.Column(db.String(100))
     project_name = db.Column(db.String(500))
-    promoter_email = db.Column(db.String(30))
-    promoter_pan_number = db.Column(db.String(10))
+    promoter_email = db.Column(db.Text)
+    promoter_pan_number = db.Column(db.Text)
     validity_from = db.Column(db.Date)
     validity_to = db.Column(db.Date)
 
@@ -95,8 +96,10 @@ class ExtensionProjectApplicationDetails(db.Model):
             "application_number": self.application_number,
             "project_id": self.project_id,
             "project_name": self.project_name,
-            "promoter_pan_number": self.promoter_pan_number,
-            "promoter_email": self.promoter_email,
+            "promoter_pan_number": decrypt_value(self.promoter_pan_number)
+            if self.promoter_pan_number else None,
+            "promoter_email": decrypt_value(self.promoter_email)
+            if self.promoter_email else None,
             "validity_from": str(self.validity_from) if self.validity_from else None,
             "validity_to": str(self.validity_to) if self.validity_to else None,
 
@@ -153,3 +156,124 @@ class ExtensionProjectApplicationDetails(db.Model):
             "updated_on": str(self.updated_on) if self.updated_on else None
             
         }
+from app.models.database import db
+from sqlalchemy.sql import text
+
+
+def insert_extension_project_application(data):
+    query = text("""
+        INSERT INTO extension_project_application_details (
+            application_number,
+            project_name,
+            project_id,
+            validity_from,
+            validity_to,
+            new_validity_from,
+            new_validity_to,
+            representation_letter,
+            form_b,
+            consent_letter,
+            form_e,
+            form_p4,
+            extension_proceeding,
+            status
+        )
+        VALUES (
+            :application_number,
+            :project_name,
+            :project_id,
+            :validity_from,
+            :validity_to,
+            :new_validity_from,
+            :new_validity_to,
+            :representation_letter,
+            :form_b,
+            :consent_letter,
+            :form_e,
+            :form_p4,
+            :extension_proceeding,
+            'SUBMITTED'
+        )
+    """)
+
+    db.session.execute(query, {
+        "application_number": data["application_number"],
+        "project_name": data["project_name"],
+        "project_id": data["project_id"],
+        "validity_from": data["validity_from"],
+        "validity_to": data["validity_to"],
+        "new_validity_from": data["new_validity_from"],
+        "new_validity_to": data["new_validity_to"],
+        "representation_letter": data["representation_letter"],
+        "form_b": data["form_b"],
+        "consent_letter": data["consent_letter"],
+        "form_e": data["form_e"],
+        "form_p4": data["form_p4"],
+        "extension_proceeding": data["extension_proceeding"],
+    })
+
+    db.session.commit()
+
+
+
+    
+from app.utils.encryption import decrypt_value
+
+def get_project_basic_details_by_pan(pan_number):
+
+    query = text("""
+        WITH all_promoters AS (
+            SELECT
+                application_no as app_no,
+                pan_number,
+                name as promoter_name,
+                promoter_type,
+                email
+            FROM project_registrations
+
+            UNION
+
+            SELECT
+                application_no as app_no,
+                pan_number,
+                organization_name as promoter_name,
+                promoter_type,
+                authorized_signatory_email AS email
+            FROM promoter_profile_other_t_indv
+        )
+        SELECT
+            ap.app_no AS application_number,
+            ap.pan_number,
+            ap.promoter_name AS name,
+            ap.promoter_type,
+            ap.email,
+            COALESCE(NULLIF(pr.project_name, ''), pn.project_name) AS project_name,
+            pr.building_plan_no,
+            pr.building_permission_from,
+            pr.building_permission_upto
+        FROM all_promoters ap
+        LEFT JOIN project_registration pr
+            ON ap.app_no = pr.application_number
+        LEFT JOIN project_registrations pn
+            ON ap.app_no = pn.application_no
+    """)
+
+    rows = db.session.execute(query).mappings().all()
+
+    result = []
+
+    for row in rows:
+
+        db_pan = row["pan_number"]
+
+        try:
+            # encrypted PAN
+            compare_pan = decrypt_value(db_pan)
+        except:
+            # normal PAN
+            compare_pan = db_pan
+
+        if compare_pan and compare_pan.strip().upper() == pan_number.strip().upper():
+            result.append(dict(row))
+
+    return result

@@ -1,5 +1,6 @@
 from app.models.database import db
 from datetime import datetime
+from app.utils.encryption import decrypt_value
 
 
 class ProjectRegistrationConsultant(db.Model):
@@ -35,11 +36,11 @@ class ProjectRegistrationConsultant(db.Model):
     def to_dict(self):
         return {
             "application_number": self.application_number,
-            "pan_number": self.pan_number,
+            "pan_number": decrypt_value(self.pan_number) if self.pan_number else None,
             "consultancy_name": self.consultancy_name,
             "consultant_name": self.consultant_name,
-            "mobile_number": self.mobile_number,
-            "email_id": self.email_id,
+            "mobile_number": decrypt_value(self.mobile_number) if self.mobile_number else None,
+            "email_id": decrypt_value(self.email_id) if self.email_id else None,
             "address": self.address,
             "declaration_name": self.declaration_name,
             "declaration_accept": self.declaration_accept,

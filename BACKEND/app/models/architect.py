@@ -1,6 +1,7 @@
 from app.models.database import db
 import pytz
 from datetime import datetime
+# Store associate values as plain text; no decryption performed here
 
 IST = pytz.timezone("Asia/Kolkata")
 
@@ -43,7 +44,7 @@ class Architect(db.Model):
         return {
             "id": self.id,
             "architect_name": self.architect_name,
-            "email_id": self.email_id,
+            "email_id": self.email_id if self.email_id else None,
             "address_line1": self.address_line1,
             "address_line2": self.address_line2,
             "state_ut": self.state_ut,
@@ -52,7 +53,7 @@ class Architect(db.Model):
             "year_of_establishment": self.year_of_establishment,
             "number_of_key_projects": self.number_of_key_projects,
             "coa_registration_number": self.coa_registration_number,
-            "mobile_number": self.mobile_number,
+            "mobile_number": self.mobile_number if self.mobile_number else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
-            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None
         }

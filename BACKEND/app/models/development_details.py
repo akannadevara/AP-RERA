@@ -222,6 +222,7 @@
 import logging
 from sqlalchemy import text
 from app.models.database import db
+from app.utils.encryption import decrypt_value
 
 
 class DevelopmentDetailsModel:
@@ -293,18 +294,76 @@ class DevelopmentDetailsModel:
                 application_number,
                 created_at
             FROM development_details
-            WHERE application_number = :application_number
-              AND pan_number = :pan_number
-            ORDER BY id DESC
-            LIMIT 1
+           WHERE application_number = :application_number
+ORDER BY id DESC
         """)
 
-        result = db.session.execute(
+        result_rows = db.session.execute(
             query,
             {
-                "application_number": application_number,
-                "pan_number": pan_number
+                "application_number": application_number
             }
-        ).mappings().first()
+        ).mappings().all()
 
-        return dict(result) if result else None
+        if not result_rows:
+            return None
+
+        for row in result_rows:
+            db_row = dict(row)
+            db_pan = db_row.get("pan_number")
+
+            try:
+                compare_pan = decrypt_value(db_pan) if db_pan else db_pan
+            except Exception:
+                compare_pan = db_pan
+
+            if compare_pan and compare_pan.strip().upper() == pan_number.strip().upper():
+                db_row["pan_number"] = compare_pan
+                return db_row
+
+        return None
+
+
+    @staticmethod
+    def get_all_by_application_and_pan(application_number, pan_number):
+        query = text("""
+            SELECT
+                id,
+                project_id,
+                project_type,
+                development_details,
+                external_development_work,
+                other_external_works,
+                work_description,
+                work_type,
+                pan_number,
+                application_number,
+                created_at
+            FROM development_details
+            WHERE application_number = :application_number
+            ORDER BY id DESC
+        """)
+
+        rows = db.session.execute(
+            query,
+            {
+                "application_number": application_number
+            }
+        ).mappings().all()
+
+        results = []
+
+        for row in rows:
+            row_dict = dict(row)
+            db_pan = row_dict.get("pan_number")
+
+            try:
+                compare_pan = decrypt_value(db_pan) if db_pan else db_pan
+            except Exception:
+                compare_pan = db_pan
+
+            if compare_pan and compare_pan.strip().upper() == pan_number.strip().upper():
+                row_dict["pan_number"] = compare_pan
+                results.append(row_dict)
+
+        return results

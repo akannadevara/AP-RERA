@@ -314,25 +314,27 @@ def build_project_preview_data(raw):
         if atype == "agent":
             ag = AgentModel.query.get(a.associate_id)
             if ag:
+                ag_dict = ag.to_dict()
                 associate_details["agents"].append({
                     "name": ag.agent_name,
                     "address": ag.agent_address,
-                    "mobile": ag.mobile_number,
+                    "mobile": ag_dict.get("mobile_number"),
                     "registration_number": ag.rera_registration_no,
                 })
 
         elif atype == "architect":
             arch = Architect.query.get(a.associate_id)
             if arch:
+                arch_dict = arch.to_dict()
                 associate_details["architects"].append({
                     "name": arch.architect_name,
-                    "email": arch.email_id,
+                    "email": arch_dict.get("email_id"),
                     "address": arch.address_line1,
                     "address2": arch.address_line2,
                     "state": arch.state_ut,
                     "district": arch.district,
                     "pin_code": arch.pin_code,
-                    "mobile": arch.mobile_number,
+                    "mobile": arch_dict.get("mobile_number"),
                     "reg_number": arch.coa_registration_number,
                     "year_of_establishment": arch.year_of_establishment,
                     "number_of_key_projects": arch.number_of_key_projects,
@@ -341,15 +343,16 @@ def build_project_preview_data(raw):
         elif atype == "engineer":
             eng = Engineer.query.get(a.associate_id)
             if eng:
+                eng_dict = eng.to_dict()
                 associate_details["engineers"].append({
                     "name": eng.engineer_name,
-                    "email": eng.email_id,
+                    "email": eng_dict.get("email_id"),
                     "address": eng.address_line1,
                     "address2": eng.address_line2,
                     "state": eng.state_ut,
                     "district": eng.district,
                     "pin_code": eng.pin_code,
-                    "mobile": eng.mobile_number,
+                    "mobile": eng_dict.get("mobile_number"),
                     "licence_number": eng.licence_number,
                     "number_of_key_projects": eng.number_of_key_projects,
                 })
@@ -357,15 +360,16 @@ def build_project_preview_data(raw):
         elif atype == "accountant":
             acc = Accountant.query.get(a.associate_id)
             if acc:
+                acc_dict = acc.to_dict()
                 associate_details["accountants"].append({
                     "name": acc.accountant_name,
-                    "email": acc.email_id,
+                    "email": acc_dict.get("email_id"),
                     "address": acc.address_line1,
                     "address2": acc.address_line2,
                     "state": acc.state_ut,
                     "district": acc.district,
                     "pin_code": acc.pin_code,
-                    "mobile": acc.mobile_number,
+                    "mobile": acc_dict.get("mobile_number"),
                     "icai_member_id": acc.icai_member_id,
                     "number_of_key_projects": acc.number_of_key_projects,
                 })
@@ -373,32 +377,34 @@ def build_project_preview_data(raw):
         elif atype == "project_engineer":
             pe = ProjectEngineer.query.get(a.associate_id)
             if pe:
+                pe_dict = pe.to_dict()
                 associate_details["project_engineers"].append({
                     "engineer_name": pe.engineer_name,
-                    "email_id": pe.email_id,
+                    "email_id": pe_dict.get("email_id"),
                     "address_line1": pe.address_line1,
                     "address_line2": pe.address_line2,
                     "state_ut": pe.state_ut,
                     "district": pe.district,
                     "pin_code": pe.pin_code,
-                    "mobile_number": pe.mobile_number,
+                    "mobile_number": pe_dict.get("mobile_number"),
                     "number_of_key_projects": pe.number_of_key_projects,
                 })
 
         elif atype == "contractor":
             con = Contractor.query.get(a.associate_id)
             if con:
+                con_dict = con.to_dict()
                 associate_details["contractors"].append({
                     "nature_of_work": con.nature_of_work,
                     "contractor_name": con.contractor_name,
-                    "email_id": con.email_id,
+                    "email_id": con_dict.get("email_id"),
                     "address_line1": con.address_line1,
                     "state_ut": con.state_ut,
                     "district": con.district,
                     "pin_code": con.pin_code,
                     "year_of_establishment": con.year_of_establishment,
                     "number_of_key_projects": con.number_of_key_projects,
-                    "mobile_number": con.mobile_number,
+                    "mobile_number": con_dict.get("mobile_number"),
                 })
 
                 
